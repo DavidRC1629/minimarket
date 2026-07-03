@@ -61,6 +61,9 @@ pipeline {
         stage('Despliegue Continuo') {
             steps {
                 echo "🚀 Actualizando el contenedor..."
+                sh '''
+                    docker rm -f minimarket-backend minimarket-frontend 2>/dev/null || true
+                '''
                 sh 'docker compose up -d --build'
             }
         }
