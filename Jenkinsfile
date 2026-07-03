@@ -45,8 +45,8 @@ pipeline {
             steps {
                 echo "📊 Enviando código a SonarQube..."
                 withSonarQubeEnv('sonar-server') {
-                    // Cambiado a -Dsonar.token (requisito de versiones modernas de SonarQube)
-                    sh 'mvn sonar:sonar -Dsonar.token=$SONAR_AUTH_TOKEN'
+                    // Usamos expansión explícita para pasar el token al análisis
+                    sh "mvn sonar:sonar -Dsonar.token=${env.SONAR_AUTH_TOKEN}"
                 }
             }
         }
