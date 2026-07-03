@@ -38,10 +38,7 @@ pipeline {
         stage('Construcción y Pruebas Unitarias') {
             steps {
                 echo "🔨 Compilando el proyecto..."
-                // Entramos a la carpeta donde está el pom.xml
-                dir('minimarket-backend') {
-                    sh 'mvn -B clean verify'
-                }
+                sh 'mvn -B clean verify'
             }
         }
 
@@ -49,10 +46,8 @@ pipeline {
             steps {
                 echo "📊 Enviando código a SonarQube..."
                 withSonarQubeEnv('sonar-server') {
-                    dir('minimarket-backend') {
-                        // Cambiado a -Dsonar.token (requisito de versiones modernas de SonarQube)
-                        sh 'mvn sonar:sonar -Dsonar.token=$SONAR_AUTH_TOKEN'
-                    }
+                    // Cambiado a -Dsonar.token (requisito de versiones modernas de SonarQube)
+                    sh 'mvn sonar:sonar -Dsonar.token=$SONAR_AUTH_TOKEN'
                 }
             }
         }
@@ -60,17 +55,13 @@ pipeline {
         stage('Construir Imagen Docker') {
             steps {
                 echo "🐳 Construyendo la nueva versión..."
-                dir('minimarket-backend') {
-                    sh "docker build -t ${IMAGE_NAME} ."
-                }
+                sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
         stage('Despliegue Continuo') {
             steps {
                 echo "🚀 Actualizando el contenedor..."
-                // Asumiendo que el docker-compose.yml está en la raíz, 
-                // si está dentro de la carpeta, agrega dir('minimarket-backend')
                 sh 'docker compose up -d --build'
             }
         }
@@ -79,7 +70,7 @@ pipeline {
             steps {
                 echo "🔥 Verificando que la aplicación levantó correctamente..."
                 sh 'sleep 15'
-                sh 'curl -f http://localhost:8080/actuator/health'
+                sh 'curl -f http://localhost:8081/actuator/health'
             }
         }
     }
