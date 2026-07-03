@@ -74,11 +74,12 @@ pipeline {
                 sh '''
                     i=1
                     while [ "$i" -le 12 ]; do
-                        if curl -fs http://localhost:8081/actuator/health >/dev/null; then
-                            echo "✅ Actuator health respondió correctamente."
+                        HEALTH_STATUS=$(docker inspect -f '{{.State.Health.Status}}' $APP_NAME 2>/dev/null || echo "starting")
+                        if [ "$HEALTH_STATUS" = "healthy" ]; then
+                            echo "✅ El contenedor está healthy."
                             exit 0
                         fi
-                        echo "⏳ Esperando a que el backend esté listo... intento $i/12"
+                        echo "⏳ Esperando a que el backend esté healthy... intento $i/12 (estado actual: $HEALTH_STATUS)"
                         sleep 5
                         i=$((i + 1))
                     done
