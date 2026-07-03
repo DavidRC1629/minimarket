@@ -1,0 +1,43 @@
+name: Despliegue Continuo a AWS EC2
+
+# Esto le dice a GitHub que ejecute el pipeline cuando hagas un push a la rama 'main'
+on:
+  push:
+    branches:
+      - main # Si tu rama principal se llama 'master', cámbialo aquí.
+
+jobs:
+  deploy:
+    name: Desplegar en servidor AWS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Conexión SSH y Despliegue con Docker
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. Actualizar el sistema e instalar Git por si acaso
+            sudo yum update -y
+            sudo yum install git -y
+
+            # 2. Verificar si el proyecto ya fue clonado antes
+            if [ ! -d "minimarket" ]; then
+              echo "Clonando el repositorio por primera vez..."
+              git clone https://github.com/DavidRC1629/minimarket.git
+            fi
+
+            # 3. Entrar a la carpeta del proyecto
+            cd minimarket
+
+            # 4. Forzar la descarga de los últimos cambios
+            git reset --hard origin/main
+            git pull origin main
+
+            # 5. Reconstruir y levantar los contenedores con el nuevo código
+            docker compose up -d --build
+            
+            # 6. Limpiar imágenes viejas que ya no se usan para no llenar el disco
+            docker image prune -f
