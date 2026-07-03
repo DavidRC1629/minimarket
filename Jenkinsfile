@@ -71,8 +71,20 @@ pipeline {
         stage('Smoke Test (Prueba de Humo)') {
             steps {
                 echo "🔥 Verificando que la aplicación levantó correctamente..."
-                sh 'sleep 15'
-                sh 'curl -f http://localhost:8081/actuator/health'
+                sh '''
+                    i=1
+                    while [ "$i" -le 12 ]; do
+                        if curl -fs http://localhost:8081/actuator/health >/dev/null; then
+                            echo "✅ Actuator health respondió correctamente."
+                            exit 0
+                        fi
+                        echo "⏳ Esperando a que el backend esté listo... intento $i/12"
+                        sleep 5
+                        i=$((i + 1))
+                    done
+                    echo "❌ ERROR FATAL: El backend no respondió en el tiempo esperado."
+                    exit 1
+                '''
             }
         }
 
