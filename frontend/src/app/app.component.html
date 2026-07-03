@@ -1,0 +1,120 @@
+<header>
+  <h1>Minimarket</h1>
+  <p>Dashboard de ventas e inventario conectado a tu backend Spring Boot.</p>
+</header>
+
+<main class="app-shell">
+  <div class="grid">
+    <section class="card">
+      <h2>Categorías</h2>
+      <button class="button-primary" (click)="cargarCategorias()">Actualizar categorías</button>
+      <div class="message-box" *ngIf="message()">{{ message() }}</div>
+      <div class="table-wrapper" *ngIf="categorias().length > 0; else sinCategorias">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let categoria of categorias()">
+              <td>{{ categoria.id }}</td>
+              <td>{{ categoria.nombre }}</td>
+              <td>{{ categoria.descripcion }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #sinCategorias>
+        <p>No se encontraron categorías.</p>
+      </ng-template>
+    </section>
+
+    <section class="card">
+      <h2>Productos</h2>
+      <button class="button-primary" (click)="cargarProductos()">Actualizar productos</button>
+      <div class="table-wrapper" *ngIf="productos().length > 0; else sinProductos">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let producto of productos()">
+              <td>{{ producto.id }}</td>
+              <td>{{ producto.nombre }}</td>
+              <td>{{ producto.categoria?.nombre }}</td>
+              <td>S/. {{ producto.precio }}</td>
+              <td>{{ producto.stock }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #sinProductos>
+        <p>No hay productos disponibles.</p>
+      </ng-template>
+    </section>
+
+    <section class="card">
+      <h2>Registrar venta</h2>
+      <form (ngSubmit)="registrarVenta()">
+        <label>
+          Producto
+          <select [(ngModel)]="selectedProduct" name="producto" required>
+            <option *ngFor="let producto of productos()" [ngValue]="producto.id">
+              {{ producto.nombre }} - S/. {{ producto.precio }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          Cantidad
+          <input type="number" [(ngModel)]="selectedQuantity" name="cantidad" min="1" required />
+        </label>
+
+        <button class="button-primary" type="submit">Registrar venta</button>
+      </form>
+    </section>
+
+    <section class="card" style="grid-column: 1 / -1;">
+      <h2>Últimas ventas</h2>
+      <button class="button-primary" (click)="cargarVentas()">Actualizar ventas</button>
+      <div class="table-wrapper" *ngIf="ventas().length > 0; else sinVentas">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Total</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let venta of ventas()">
+              <td>{{ venta.id }}</td>
+              <td>{{ venta.producto?.nombre }}</td>
+              <td>{{ venta.cantidad }}</td>
+              <td>S/. {{ venta.total }}</td>
+              <td>{{ venta.fecha | date:'short' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #sinVentas>
+        <p>No hay ventas registradas todavía.</p>
+      </ng-template>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <p>API backend disponible en <code>{{ environment.apiUrl }}</code>. Construido profesionalmente para demo.</p>
+</footer>

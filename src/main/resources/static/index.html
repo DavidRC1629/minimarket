@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimarket - Frontend</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Minimarket</h1>
+        <p>Frontend integrado con el backend Spring Boot usando API REST</p>
+    </header>
+
+    <main>
+        <section class="panel">
+            <h2>Categorías</h2>
+            <button id="load-categorias">Cargar categorías</button>
+            <div id="categorias-result" class="result"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Productos</h2>
+            <button id="load-productos">Cargar productos</button>
+            <div id="productos-result" class="result"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Registrar venta</h2>
+            <form id="venta-form">
+                <label>
+                    Producto:
+                    <select id="producto-select"></select>
+                </label>
+                <label>
+                    Cantidad:
+                    <input type="number" id="venta-cantidad" min="1" value="1" required>
+                </label>
+                <button type="submit">Registrar venta</button>
+            </form>
+            <div id="venta-result" class="result"></div>
+        </section>
+
+        <section class="panel">
+            <h2>Ventas</h2>
+            <button id="load-ventas">Cargar ventas</button>
+            <div id="ventas-result" class="result"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Backend: <code>/api/categorias</code>, <code>/api/productos</code>, <code>/api/ventas</code></p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
