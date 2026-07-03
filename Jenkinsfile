@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven-3.9' // Asegúrate de que el nombre coincida con el configurado en Jenkins > Global Tool Configuration
+        maven 'Maven-3.9'
         jdk 'JDK-17'
     }
 
@@ -22,15 +22,13 @@ pipeline {
             steps {
                 script {
                     echo "🔍 Verificando conexión estricta con el contenedor Docker..."
-                    // Este script bash hace que el pipeline FALLE (exit 1) si tumbaste el contenedor
                     sh '''
                         IS_RUNNING=$(docker inspect -f '{{.State.Running}}' $APP_NAME 2>/dev/null || echo "false")
                         if [ "$IS_RUNNING" != "true" ]; then
-                            echo "❌ ERROR FATAL: El contenedor $APP_NAME está caído, no existe o fue alterado."
-                            echo "El pipeline no puede continuar en un entorno roto."
+                            echo "❌ ERROR FATAL: El contenedor $APP_NAME está caído."
                             exit 1
                         else
-                            echo "✅ El contenedor $APP_NAME está activo y conectado al pipeline."
+                            echo "✅ El contenedor $APP_NAME está activo."
                         fi
                     '''
                 }
@@ -40,19 +38,21 @@ pipeline {
         stage('Construcción y Pruebas Unitarias') {
             steps {
                 echo "🔨 Compilando el proyecto..."
-                sh 'mvn -B clean verify'
+                // Entramos a la carpeta donde está el pom.xml
+                dir('minimarket-backend') {
+                    sh 'mvn -B clean verify'
+                }
             }
         }
 
-        // ==========================================
-        // ETAPA MODIFICADA: INTEGRACIÓN ESTRICTA CON SONARQUBE
-        // ==========================================
         stage('Análisis de Calidad (SonarQube)') {
             steps {
-                echo "📊 Enviando código a SonarQube para análisis estático..."
+                echo "📊 Enviando código a SonarQube..."
                 withSonarQubeEnv('sonar-server') {
-                    // Forzamos el uso de las variables inyectadas por el bloque withSonarQubeEnv
-                    sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
+                    dir('minimarket-backend') {
+                        // Cambiado a -Dsonar.token (requisito de versiones modernas de SonarQube)
+                        sh 'mvn sonar:sonar -Dsonar.token=$SONAR_AUTH_TOKEN'
+                    }
                 }
             }
         }
@@ -60,14 +60,17 @@ pipeline {
         stage('Construir Imagen Docker') {
             steps {
                 echo "🐳 Construyendo la nueva versión..."
-                sh "docker build -t ${IMAGE_NAME} ."
+                dir('minimarket-backend') {
+                    sh "docker build -t ${IMAGE_NAME} ."
+                }
             }
         }
 
         stage('Despliegue Continuo') {
             steps {
                 echo "🚀 Actualizando el contenedor..."
-                // Levantamos la nueva versión
+                // Asumiendo que el docker-compose.yml está en la raíz, 
+                // si está dentro de la carpeta, agrega dir('minimarket-backend')
                 sh 'docker compose up -d --build'
             }
         }
@@ -75,9 +78,7 @@ pipeline {
         stage('Smoke Test (Prueba de Humo)') {
             steps {
                 echo "🔥 Verificando que la aplicación levantó correctamente..."
-                // Le damos 15 segundos a Spring Boot para levantar
                 sh 'sleep 15'
-                // Si el healthcheck no responde un HTTP 200, esto falla y el pipeline se pone en rojo
                 sh 'curl -f http://localhost:8080/actuator/health'
             }
         }
@@ -85,10 +86,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline completado exitosamente. Entorno Docker auditado y actualizado."
+            echo "✅ Pipeline completado exitosamente."
         }
         failure {
-            echo "❌ EL PIPELINE FALLÓ. El entorno Docker fue alterado o el código tiene errores."
+            echo "❌ EL PIPELINE FALLÓ."
         }
         always {
             cleanWs()
