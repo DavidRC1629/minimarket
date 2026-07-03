@@ -44,6 +44,19 @@ pipeline {
             }
         }
 
+        // ==========================================
+        // NUEVA ETAPA: INTEGRACIÓN CON SONARQUBE
+        // ==========================================
+        stage('Análisis de Calidad (SonarQube)') {
+            steps {
+                echo "📊 Enviando código a SonarQube para análisis estático..."
+                // El nombre 'sonar-server' debe coincidir exactamente con el que configuraste en Jenkins
+                withSonarQubeEnv('sonar-server') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+
         stage('Construir Imagen Docker') {
             steps {
                 echo "🐳 Construyendo la nueva versión..."
