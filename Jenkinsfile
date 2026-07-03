@@ -45,14 +45,14 @@ pipeline {
         }
 
         // ==========================================
-        // NUEVA ETAPA: INTEGRACIÓN CON SONARQUBE
+        // ETAPA MODIFICADA: INTEGRACIÓN ESTRICTA CON SONARQUBE
         // ==========================================
         stage('Análisis de Calidad (SonarQube)') {
             steps {
                 echo "📊 Enviando código a SonarQube para análisis estático..."
-                // El nombre 'sonar-server' debe coincidir exactamente con el que configuraste en Jenkins
                 withSonarQubeEnv('sonar-server') {
-                    sh 'mvn sonar:sonar'
+                    // Forzamos el uso de las variables inyectadas por el bloque withSonarQubeEnv
+                    sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_AUTH_TOKEN'
                 }
             }
         }
