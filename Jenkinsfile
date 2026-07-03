@@ -21,14 +21,13 @@ pipeline {
         stage('Auditoría de Entorno (Regla del Profesor)') {
             steps {
                 script {
-                    echo "🔍 Verificando conexión estricta con el contenedor Docker..."
+                    echo "🔍 Verificando conexión con el daemon Docker..."
                     sh '''
-                        IS_RUNNING=$(docker inspect -f '{{.State.Running}}' $APP_NAME 2>/dev/null || echo "false")
-                        if [ "$IS_RUNNING" != "true" ]; then
-                            echo "❌ ERROR FATAL: El contenedor $APP_NAME está caído."
+                        if ! docker info >/dev/null 2>&1; then
+                            echo "❌ ERROR FATAL: Docker no está disponible en el agente."
                             exit 1
                         else
-                            echo "✅ El contenedor $APP_NAME está activo."
+                            echo "✅ Docker está disponible en el agente."
                         fi
                     '''
                 }
@@ -71,6 +70,23 @@ pipeline {
                 echo "🔥 Verificando que la aplicación levantó correctamente..."
                 sh 'sleep 15'
                 sh 'curl -f http://localhost:8081/actuator/health'
+            }
+        }
+
+        stage('Validar Contenedor') {
+            steps {
+                script {
+                    echo "🔎 Verificando que el contenedor minimarket-backend quedó arriba..."
+                    sh '''
+                        IS_RUNNING=$(docker inspect -f '{{.State.Running}}' $APP_NAME 2>/dev/null || echo "false")
+                        if [ "$IS_RUNNING" != "true" ]; then
+                            echo "❌ ERROR FATAL: El contenedor $APP_NAME no quedó ejecutándose."
+                            exit 1
+                        else
+                            echo "✅ El contenedor $APP_NAME quedó ejecutándose correctamente."
+                        fi
+                    '''
+                }
             }
         }
     }
